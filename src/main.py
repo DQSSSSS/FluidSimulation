@@ -1,4 +1,5 @@
 import taichi as ti
+import os
 from wcsph import *
 
 # Default run on CPU
@@ -14,6 +15,9 @@ if __name__ == '__main__':
     res = (400, 400)
     screen_to_world_ratio = 35
     alpha=0.5
+
+    # gui controller
+    is_show_grid = False
 
     gui = ti.GUI('SPH', res, background_color=0x112F41)
     sph = SPH(ti.Vector([[0, res[1]], [0, res[0]]]), 
@@ -47,20 +51,31 @@ if __name__ == '__main__':
                 sph = SPH(ti.Vector([[0, res[1]], [0, res[0]]]), 
                     screen_to_world_ratio,
                     alpha=alpha)
+                frame = save_frame = 0
+            if gui.is_pressed('g'):
+                is_show_grid = not is_show_grid
     
         for i in range(40):
             sph.step()
         particles = sph.get_positions()
 
         gui.circles(particles, 
-                    radius=1.5,
+                    radius=2,
                     palette=colors,
                     palette_indices=sph.get_color_indices())
 
-        # if frame % 50 == 0:
-        #     gui.show(f'{save_frame:06d}.png')
-        #     save_frame += 1
+        if is_show_grid:
+            bg, ed = sph.get_grid_lines()   
+            gui.lines(begin=bg, 
+                    end=ed, 
+                    radius=1, color=0x068587)
 
-        gui.show()
+
+        if frame % 10 == 0:
+            os.makedirs("src/output", exist_ok=True)
+            gui.show(f'src/output/{save_frame:06d}.png')
+            save_frame += 1
+        else:
+            gui.show()
         frame += 1
     print('done')
